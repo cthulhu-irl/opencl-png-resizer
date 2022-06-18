@@ -2,7 +2,7 @@
 
 Resizes a given png file to given dimensions using libpng and opencl as backend, with nearest neighbour interpolation algorithm.
 
-### build
+## Build
 
 clone and enter the directory, then:
 ```
