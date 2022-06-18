@@ -1,7 +1,9 @@
+#include <cstdlib>
 #include <iostream>
 
 #include "image.hpp"
 #include "pngfile.hpp"
+#include "resizer.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc != 5) {
@@ -28,9 +30,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    Image output_image = input_file->resize(width, height);
+    auto output_image = Resizer::resize(*input_file, width, height);
 
-    if (!PNGFile::save_to_file(output_image, output_filepath)) {
+    if (!output_image || !output_image->save_as(output_filepath)) {
         std::cerr << " [!] couldn't save output file." << std::endl;
         return 1;
     }

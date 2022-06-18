@@ -40,7 +40,8 @@ class Image {
     //    return arr_[x * channels * width_ + y * channels];
     //}
 
-    seq_type* data() noexcept { return arr_.get(); }
+    seq_type* data() noexcept { return static_cast<seq_type*>(arr_.get()); }
+    const seq_type* data() const noexcept { return static_cast<const seq_type*>(arr_.get()); }
 
     seq_type* begin() noexcept { return data(); }
     seq_type* end() noexcept { return data() + size(); }

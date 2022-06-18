@@ -3,7 +3,10 @@
 #include <string_view>
 #include <stdexcept>
 
+#define CL_HPP_TARGET_OPENCL_VERSION 210
 #include <CL/cl2.hpp>
+
+// edited from: https://github.com/vencabkk/opencl-resizer/
 
 class OpenCLManager {
     cl::Platform     paltform_;
@@ -13,13 +16,10 @@ class OpenCLManager {
     cl::Program      program_;
 
   public:
-    OpenCLManager() {
-      if (!create_context())
-        throw std::runtime_error("Couldn't setup OpenCL.");
-    }
+    OpenCLManager() { create_context(); }
 
-    bool create_kernel_program(const char* program_str) {
-      program_ = cl::Program(context_, program_src.data(), true);
+    bool create_kernel_program(const char* program_src) {
+      program_ = cl::Program(context_, program_src, true);
       // TODO check `program_`'s validity.
       return true;
     }
@@ -29,5 +29,5 @@ class OpenCLManager {
     cl::CommandQueue get_queue() { return queue_; }
 
   private:
-    bool create_context();
+    void create_context();
 };

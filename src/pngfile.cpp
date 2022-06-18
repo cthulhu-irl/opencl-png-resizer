@@ -2,21 +2,33 @@
 
 #include "pngfile.hpp"
 
+// following code was edited from: https://gist.github.com/niw/5963798 (libpng usages)
+
+
+    template <typename ...>
+    struct print;
+
 auto PNGFile::load_from_file(const char* filepath) -> std::optional<PNGFile> {
-    FILE* fp = fopen(filepath);
+    FILE* fp = fopen(filepath, "rb");
     if (!fp)
         return std::nullopt;
 
-    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if(!png)
+    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if(!png) {
+        fclose(fp);
         return std::nullopt;
+    }
 
     png_infop info = png_create_info_struct(png);
-    if(!info)
+    if(!info) {
+        fclose(fp);
         return std::nullopt;
+    }
 
-    if(setjmp(png_jmpbuf(png)))
+    if(setjmp(png_jmpbuf(png))) {
+        fclose(fp);
         return std::nullopt;
+    }
 
     png_init_io(png, fp);
 
@@ -51,13 +63,59 @@ auto PNGFile::load_from_file(const char* filepath) -> std::optional<PNGFile> {
 
     png_read_update_info(png, info);
 
-    png_bytepp output.rowpointers_.get();
-    png_read_image(png, rowpointers_);
+    png_bytepp rowpointers = output.rowpointers_.get();
+    png_read_image(png, rowpointers);
 
-    png_destroy_read_struct(&png, &info, NULL);
+    png_destroy_read_struct(&png, &info, nullptr);
+
+    return output;
 }
 
-bool PNGFile::save_to_file(const Image& image, std::string_view filepath) {
-    // TODO implement.
-    return false;
+bool PNGFile::save_to_file(const PNGFile& image, const char* filepath) {
+    FILE *fp = fopen(filepath, "wb");
+    if(!fp)
+        return false;
+
+    png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (!png) {
+        fclose(fp);
+        return false;
+    }
+
+    png_infop info = png_create_info_struct(png);
+    if (!info) {
+        fclose(fp);
+        return false;
+    }
+
+    if (setjmp(png_jmpbuf(png))) {
+        fclose(fp);
+        return false;
+    }
+
+    png_init_io(png, fp);
+
+    // Output is 8bit depth, RGBA format.
+    png_set_IHDR(
+        png,
+        info,
+        image.width(),
+        image.height(),
+        8,
+        PNG_COLOR_TYPE_RGBA,
+        PNG_INTERLACE_NONE,
+        PNG_COMPRESSION_TYPE_DEFAULT,
+        PNG_FILTER_TYPE_DEFAULT
+    );
+    png_write_info(png, info);
+
+    png_bytep* rowpointers = image.rowpointers_.get();
+    png_write_image(png, rowpointers);
+    png_write_end(png, nullptr);
+
+    png_destroy_write_struct(&png, &info);
+
+    fclose(fp);
+
+    return true;
 }
