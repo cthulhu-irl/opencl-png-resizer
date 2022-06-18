@@ -74,8 +74,7 @@ auto Resizer::resize(const Image& image, std::size_t width, std::size_t height)
     -> std::optional<Image>
 {
    try {
-      OpenCLManager manager{};
-      manager.create_kernel_program(resizer_program_src);
+      OpenCLManager manager(resizer_program_src);
 
       Image output(width, height);
 
