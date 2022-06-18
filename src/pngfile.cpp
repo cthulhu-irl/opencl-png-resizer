@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <png.h>
 
 #include "pngfile.hpp"
@@ -39,29 +41,29 @@ auto PNGFile::load_from_file(const char* filepath) -> std::optional<PNGFile> {
     auto color_type = png_get_color_type(png, info);
     auto bit_depth  = png_get_bit_depth(png, info);
 
-    PNGFile output(width, height);
-
-    if(bit_depth == 16)
+    if (bit_depth == 16)
         png_set_strip_16(png);
 
-    if(color_type == PNG_COLOR_TYPE_PALETTE)
+    if (color_type == PNG_COLOR_TYPE_PALETTE)
         png_set_palette_to_rgb(png);
 
     // PNG_COLOR_TYPE_GRAY_ALPHA is always 8 or 16bit depth.
-    if(color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
         png_set_expand_gray_1_2_4_to_8(png);
 
-    if(png_get_valid(png, info, PNG_INFO_tRNS))
+    if (png_get_valid(png, info, PNG_INFO_tRNS))
         png_set_tRNS_to_alpha(png);
 
     // These color_type don't have an alpha channel then fill it with 0xff.
-    if(color_type == PNG_COLOR_TYPE_RGB || color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_PALETTE)
+    if (color_type == PNG_COLOR_TYPE_RGB || color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_PALETTE)
         png_set_filler(png, 0xFF, PNG_FILLER_AFTER);
 
-    if(color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+    if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
         png_set_gray_to_rgb(png);
 
     png_read_update_info(png, info);
+
+    PNGFile output(width, height);
 
     png_bytepp rowpointers = output.rowpointers_.get();
     png_read_image(png, rowpointers);
@@ -73,7 +75,7 @@ auto PNGFile::load_from_file(const char* filepath) -> std::optional<PNGFile> {
 
 bool PNGFile::save_to_file(const PNGFile& image, const char* filepath) {
     FILE *fp = fopen(filepath, "wb");
-    if(!fp)
+    if (!fp)
         return false;
 
     png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);

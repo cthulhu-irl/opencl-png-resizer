@@ -4,12 +4,14 @@
 #include <stdexcept>
 
 #define CL_HPP_TARGET_OPENCL_VERSION 210
+#define CL_HPP_ENABLE_EXCEPTIONS
+
 #include <CL/cl2.hpp>
 
 // edited from: https://github.com/vencabkk/opencl-resizer/
 
 class OpenCLManager {
-    cl::Platform     paltform_;
+    cl::Platform     platform_;
     cl::Device       device_;
     cl::Context      context_;
     cl::CommandQueue queue_;

@@ -17,25 +17,35 @@ int main(int argc, char* argv[]) {
     const char* output_filepath = argv[2];
 
     auto width = std::atoi(argv[3]);
-    auto height = std::atoi(argv[3]);
+    auto height = std::atoi(argv[4]);
 
     if (width <= 0 || height <= 0) {
-        std::cerr << " [!] width and height must be equal to or greater than 1." << std::endl;
+        std::cerr << " [-] width and height must be equal to or greater than 1." << std::endl;
         return 1;
     }
 
     auto input_file = PNGFile::load_from_file(input_filepath);
     if (!input_file) {
-        std::cerr << " [!] couldn't load input file." << std::endl;
+        std::cerr << " [-] couldn't load input file." << std::endl;
         return 1;
     }
 
-    auto output_image = Resizer::resize(*input_file, width, height);
-
-    if (!output_image || !output_image->save_as(output_filepath)) {
-        std::cerr << " [!] couldn't save output file." << std::endl;
+    auto output_file = Resizer::resize(*input_file, width, height);
+    if (!output_file) {
+        std::cerr << " [-] couldn't generate output image." << std::endl;
         return 1;
     }
+
+    std::cout << " [!] input image size: " << input_file->width() << ':' << input_file->height() << std::endl;
+    std::cout << " [!] requested image size: " << width << ':' << height << std::endl;
+    std::cout << " [!] output image size: " << output_file->width() << ':' << output_file->height() << std::endl;
+
+    if (!output_file->save_as(output_filepath)) {
+        std::cerr << " [-] couldn't save output file." << std::endl;
+        return 1;
+    }
+
+    std::cout << " [+] saved output file." << std::endl;
 
     return 0;
 }

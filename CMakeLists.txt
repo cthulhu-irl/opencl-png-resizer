@@ -10,22 +10,20 @@ if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endif()
 
+set(RESIZER_SOURCES LIST src/main.cpp src/pngfile.cpp src/openclmanager.cpp src/resizer.cpp)
+
 add_executable(${PROJECT_NAME} src/main.cpp src/pngfile.cpp src/openclmanager.cpp src/resizer.cpp)
 
-add_subdirectory("third_party/zlib")
+target_sources(${PROJECT_NAME} PRIVATE src/main.cpp src/pngfile.cpp src/openclmanager.cpp src/resizer.cpp)
 
-set(PNG_BUILD_ZLIB ON CACHE BOOL "" FORCE)
+set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/zlib/include")
+set(ZLIB_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/third_party/zlib/lib/zlibstatic.lib")
 
-set(PNG_TESTS OFF CACHE BOOL "")
-set(PNG_EXECUTABLES OFF CACHE BOOL "")
-set(PNG_SHARED OFF CACHE BOOL "")
-set(PNG_STATIC ON CACHE BOOL "")
+set(PNG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpng/include")
+set(PNG_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpng/lib/libpng16_static.lib")
 
-add_subdirectory("third_party/libpng")
-
-target_include_directories(${PROJECT_NAME} PRIVATE png)
-target_link_libraries(${PROJECT_NAME} PRIVATE png_static)
+target_include_directories(${PROJECT_NAME} PRIVATE ${ZLIB_INCLUDE_DIR} ${PNG_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${ZLIB_LIBRARY} ${PNG_LIBRARY})
 
 find_package(OpenCL REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenCL::OpenCL)
-

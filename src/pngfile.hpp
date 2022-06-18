@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string_view>
 #include <optional>
 
 #include <png.h>
@@ -45,7 +44,7 @@ class PNGFile {
     std::unique_ptr<png_bytep[]> create_rowpointers() {
       auto rowpointers = std::make_unique<png_bytep[]>(image_.height());
       for (std::size_t y = 0; y < image_.height(); ++y)
-        rowpointers[y] = image_.data() + (y * image_.width() * Image::channels);
+        rowpointers[y] = image_.data() + (y * image_.width() * image_.channels());
 
       return rowpointers;
     }
