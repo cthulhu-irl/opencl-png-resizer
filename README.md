@@ -18,3 +18,59 @@ example:
 ./bin/Release/png_resizer photo.png output.png 300 200
 ```
 
+## Reproducing `third_party` (Windows, bash or similar)
+
+libpng requires zlib which we can get and compile as follow, considering current directory being `third_party`:
+```
+git clone https://github.com/madler/zlib zlibsrc
+cd zlibsrc
+
+mkdir build
+cd build
+cmake ..
+cmake --build . --config Release
+
+cd ../../
+mkdir -p zlib/include zlib/lib
+
+cp zlibsrc/build/Release/zlibstatic.lib zlib/lib/
+cp zlibsrc/build/zconf.h zlib/include/
+cp zlibsrc/zlib.h zlib/include/
+
+rm -rf zlibsrc
+```
+
+now that we have zlib's static library and public header files, we can go on building libpng:
+```
+git clone https://github.com/glennrp/libpng.git libpngsrc
+cd libpng
+
+mkdir build
+cd build
+cmake .. -DZLIB_LIBRARY=../../zlib/lib/zlibstatic -DZLIB_INCLUDE_DIR=../../zlib/include
+cmake --build . --config Release
+
+cd ../../
+mkdir -p libpng/lib libpng/include
+
+cp libpngsrc/build/Release/libpng16_static.lib libpng/lib/
+cp libpngsrc/build/png*.h libpng/include/
+cp libpngsrc/*.h libpng/include/
+
+rm -rf libpngsrc
+```
+some headers might not be required, but well...
+
+now they can be used in cmake to directly link and include:
+```
+set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/zlib/include")
+set(ZLIB_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/third_party/zlib/lib/zlibstatic.lib")
+
+set(PNG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpng/include")
+set(PNG_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpng/lib/libpng16_static.lib")
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${ZLIB_INCLUDE_DIR} ${PNG_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${ZLIB_LIBRARY} ${PNG_LIBRARY})
+```
+
+although zlib might not be required here as it was a dependency of libpng and was linked to and built statically.
