@@ -10,7 +10,7 @@ if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endif()
 
-add_executable(${PROJECT_NAME} src/main.cpp src/pngfile.cpp src/openclmanager.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/pngfile.cpp src/openclmanager.cpp src/resizer.cpp)
 
 add_subdirectory("third_party/zlib")
 
