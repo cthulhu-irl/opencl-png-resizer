@@ -1,6 +1,8 @@
 #include "image.hpp"
 #include "pngfile.hpp"
 
+/** static class behaving as namespace, with static methods to resize Image variants.
+ */
 struct Resizer {
     static auto resize(const Image& image, std::size_t width, std::size_t height) -> std::optional<Image>;
 

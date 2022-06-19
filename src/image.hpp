@@ -5,9 +5,11 @@
 #include <memory>
 #include <iterator>
 
+/** 2D array (internally linear) representing 2D Image.
+ */
 class Image {
     using seq_type = unsigned char;
-    constexpr static std::size_t channels_count = 4;
+    constexpr static std::size_t channels_count = 4; // RGBA
 
     std::unique_ptr<seq_type[]> arr_ = nullptr;
     std::size_t                 width_ = 0;

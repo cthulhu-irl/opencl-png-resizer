@@ -6,6 +6,8 @@
 #include <CL/cl2.hpp>
 
 constexpr static const char* resizer_program_entry = "resize_linear";
+
+/// linear interpolation (lerp) algorithm in opencl language.
 constexpr static const char* resizer_program_src = R"eof(
 __constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
@@ -75,11 +77,13 @@ struct CLImageSize { unsigned int Width; unsigned int Height; };
 auto Resizer::resize(const Image& image, std::size_t width, std::size_t height)
     -> std::optional<Image>
 {
+     // setup context, queue, and program
      cl::Context context(CL_DEVICE_TYPE_DEFAULT);
      cl::CommandQueue queue(context, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
 
      cl::Program program(context, resizer_program_src, true);
 
+     // create/allocate output image
      Image output(width, height);
 
      CLImageSize inp_size { static_cast<unsigned int>(image.width()), static_cast<unsigned int>(image.height()) };
@@ -87,7 +91,7 @@ auto Resizer::resize(const Image& image, std::size_t width, std::size_t height)
 
      cl::ImageFormat image_format(CL_RGBA, CL_UNORM_INT8);
 
-     // Create an OpenCL Image / texture and transfer data to the device
+     // Create an OpenCL Image and transfer data to the device
      cl::Image2D cl_image_in(
         context,
         CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
@@ -127,6 +131,7 @@ auto Resizer::resize(const Image& image, std::size_t width, std::size_t height)
          cl_image_in, cl_image_out, inp_size, out_size, ratio_x, ratio_y
      );
 
+     // finally read the image from device to output. sync/blocking operation.
      queue.enqueueReadImage(
          cl_image_out,
          CL_TRUE,

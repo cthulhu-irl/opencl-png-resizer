@@ -37,7 +37,6 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << " [!] input image size: " << input_file->width() << ':' << input_file->height() << std::endl;
-    std::cout << " [!] requested image size: " << width << ':' << height << std::endl;
     std::cout << " [!] output image size: " << output_file->width() << ':' << output_file->height() << std::endl;
 
     if (!output_file->save_as(output_filepath)) {

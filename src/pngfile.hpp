@@ -6,10 +6,11 @@
 
 #include "image.hpp"
 
-// TODO maybe inherit Image?
+/** A simple wrapper of Image that interacts with libpng to load/store png files.
+ */
 class PNGFile {
     Image image_;
-    std::unique_ptr<png_bytep[]> rowpointers_;
+    std::unique_ptr<png_bytep[]> rowpointers_; // libpng rowpointers
 
   public:
     static auto load_from_file(const char* filepath) -> std::optional<PNGFile>;
@@ -41,6 +42,15 @@ class PNGFile {
       , rowpointers_(create_rowpointers())
     {}
 
+    /** creates libpng rowpointers.
+     *
+     * libpng uses pointer array of pointers to contiguous memory (rows) to read/write file.
+     * this way, we point to portions of single chunk of memory allocated by Image,
+     * avoiding unnecessary numerous allocations and copying around, plus cache advantage.
+     *
+     * NOTE: this is on assumption that Image allocates single chunk.
+     * NOTE: pointers are non-owning, so be careful and notified if Image reallocates.
+     */
     std::unique_ptr<png_bytep[]> create_rowpointers() {
       auto rowpointers = std::make_unique<png_bytep[]>(image_.height());
       for (std::size_t y = 0; y < image_.height(); ++y)
