@@ -3,9 +3,7 @@
 #include <string_view>
 #include <stdexcept>
 
-#define CL_HPP_TARGET_OPENCL_VERSION 210
-#define CL_HPP_ENABLE_EXCEPTIONS
-
+//#define CL_HPP_ENABLE_EXCEPTIONS
 #include <CL/cl2.hpp>
 
 // edited from: https://github.com/vencabkk/opencl-resizer/
@@ -34,7 +32,7 @@ class OpenCLManager {
       return true;
     }
 
-    cl::Program get_program() { return program_; }
-    cl::Context get_context() { return context_; }
-    cl::CommandQueue get_queue() { return queue_; }
+    cl::Program& get_program() { return program_; }
+    cl::Context& get_context() { return context_; }
+    cl::CommandQueue& get_queue() { return queue_; }
 };

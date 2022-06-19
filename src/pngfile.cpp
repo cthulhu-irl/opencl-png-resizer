@@ -6,10 +6,6 @@
 
 // following code was edited from: https://gist.github.com/niw/5963798 (libpng usages)
 
-
-    template <typename ...>
-    struct print;
-
 auto PNGFile::load_from_file(const char* filepath) -> std::optional<PNGFile> {
     FILE* fp = fopen(filepath, "rb");
     if (!fp)

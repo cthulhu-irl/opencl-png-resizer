@@ -2,6 +2,7 @@
 #include "openclmanager.hpp"
 
 #include <iostream>
+#include <CL/cl2.hpp>
 
 constexpr static const char* resizer_program_entry = "resize_linear";
 constexpr static const char* resizer_program_src = R"eof(
@@ -73,46 +74,43 @@ struct CLImageSize { unsigned int Width; unsigned int Height; };
 auto Resizer::resize(const Image& image, std::size_t width, std::size_t height)
     -> std::optional<Image>
 {
-   try {
-      OpenCLManager manager(resizer_program_src);
+     OpenCLManager manager(resizer_program_src);
 
-      Image output(width, height);
+     Image output(width, height);
 
-      CLImageSize inp_size { static_cast<unsigned int>(image.width()), static_cast<unsigned int>(image.height()) };
-      CLImageSize out_size { static_cast<unsigned int>(output.width()), static_cast<unsigned int>(output.height()) };
+     CLImageSize inp_size { static_cast<unsigned int>(image.width()), static_cast<unsigned int>(image.height()) };
+     CLImageSize out_size { static_cast<unsigned int>(output.width()), static_cast<unsigned int>(output.height()) };
 
-      auto image_format = cl::ImageFormat(CL_RGBA, CL_UNORM_INT8);
+     auto image_format = cl::ImageFormat(CL_RGBA, CL_UNORM_INT8);
 
-      // Create an OpenCL Image / texture and transfer data to the device
-      cl::Image2D cl_image_in = cl::Image2D(manager.get_context(), CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, image_format,
-                                            image.width(), image.height(), 0, (void *) image.data());
+     // Create an OpenCL Image / texture and transfer data to the device
+     cl::Image2D cl_image_in = cl::Image2D(manager.get_context(), CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, image_format,
+                                           image.width(), image.height(), 0, (void *) image.data());
 
+     double ratio_x = static_cast<double>(output.width()) / static_cast<double>(image.width());
+     double ratio_y = static_cast<double>(output.height()) / static_cast<double>(image.height());
 
-      double ratio_x = static_cast<double>(output.width()) / static_cast<double>(image.width());
-      double ratio_y = static_cast<double>(output.height()) / static_cast<double>(image.height());
+     // Create a buffer for the result
+     cl::Image2D cl_image_out = cl::Image2D(manager.get_context(), CL_MEM_WRITE_ONLY, image_format,
+                                            output.width(), output.height(), 0, nullptr);
 
-      // Create a buffer for the result
-      cl::Image2D cl_image_out = cl::Image2D(manager.get_context(), CL_MEM_WRITE_ONLY, image_format,
-                                             output.width(), output.height(), 0, nullptr);
+     // Run kernel
+     cl::Kernel kernel = cl::Kernel(manager.get_program(), resizer_program_entry);
+     kernel.setArg(0, cl_image_in);
+     kernel.setArg(1, cl_image_out);
+     kernel.setArg(2, inp_size);
+     kernel.setArg(3, out_size);
+     kernel.setArg(4, ratio_x);
+     kernel.setArg(5, ratio_y);
 
-      // Run kernel
-      cl::Kernel kernel = cl::Kernel(manager.get_program(), resizer_program_entry);
-      kernel.setArg(0, cl_image_in);
-      kernel.setArg(1, cl_image_out);
-      kernel.setArg(2, inp_size);
-      kernel.setArg(3, out_size);
-      kernel.setArg(4, ratio_x);
-      kernel.setArg(5, ratio_y);
-
-      manager.get_queue().enqueueNDRangeKernel(
+     manager.get_queue().enqueueNDRangeKernel(
          kernel,
          cl::NullRange,
          cl::NDRange(output.width(), output.height()),
          cl::NullRange
-      );
+     );
 
-      
-      manager.get_queue().enqueueReadImage(
+     manager.get_queue().enqueueReadImage(
          cl_image_out,
          CL_TRUE,
          {0, 0, 0},
@@ -120,11 +118,7 @@ auto Resizer::resize(const Image& image, std::size_t width, std::size_t height)
          0,
          0,
          (void *) output.data()
-      );
+    );
 
-      return output;
-   } catch (cl::Error& err) {
-      std::cout << err.what() << std::endl;
-      return std::nullopt;
-   }
+    return output;
 }
