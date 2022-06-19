@@ -2,6 +2,14 @@
 
 Resizes a given png file to given dimensions using libpng and opencl as backend, with nearest neighbour interpolation algorithm.
 
+## Samples
+
+![image](/cthulhu-irl/opencl-png-resizer/images/brave_merida.png?raw=true)
+![image](/cthulhu-irl/opencl-png-resizer/images/output_1600x900.png?raw=true)
+![image](/cthulhu-irl/opencl-png-resizer/images/output_1280x720.png?raw=true)
+![image](/cthulhu-irl/opencl-png-resizer/images/output_854x480.png?raw=true)
+![image](/cthulhu-irl/opencl-png-resizer/images/output_200x200.png?raw=true)
+
 ## Build
 
 clone and enter the directory, then:
