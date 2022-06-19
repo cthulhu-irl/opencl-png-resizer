@@ -1,7 +1,8 @@
 #include "resizer.hpp"
-#include "openclmanager.hpp"
 
 #include <iostream>
+
+#define CL_HPP_ENABLE_EXCEPTIONS
 #include <CL/cl2.hpp>
 
 constexpr static const char* resizer_program_entry = "resize_linear";
@@ -74,43 +75,59 @@ struct CLImageSize { unsigned int Width; unsigned int Height; };
 auto Resizer::resize(const Image& image, std::size_t width, std::size_t height)
     -> std::optional<Image>
 {
-     OpenCLManager manager(resizer_program_src);
+     cl::Context context(CL_DEVICE_TYPE_DEFAULT);
+     cl::CommandQueue queue(context, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
+
+     cl::Program program(context, resizer_program_src, true);
 
      Image output(width, height);
 
      CLImageSize inp_size { static_cast<unsigned int>(image.width()), static_cast<unsigned int>(image.height()) };
      CLImageSize out_size { static_cast<unsigned int>(output.width()), static_cast<unsigned int>(output.height()) };
 
-     auto image_format = cl::ImageFormat(CL_RGBA, CL_UNORM_INT8);
+     cl::ImageFormat image_format(CL_RGBA, CL_UNORM_INT8);
 
      // Create an OpenCL Image / texture and transfer data to the device
-     cl::Image2D cl_image_in = cl::Image2D(manager.get_context(), CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, image_format,
-                                           image.width(), image.height(), 0, (void *) image.data());
-
-     double ratio_x = static_cast<double>(output.width()) / static_cast<double>(image.width());
-     double ratio_y = static_cast<double>(output.height()) / static_cast<double>(image.height());
-
-     // Create a buffer for the result
-     cl::Image2D cl_image_out = cl::Image2D(manager.get_context(), CL_MEM_WRITE_ONLY, image_format,
-                                            output.width(), output.height(), 0, nullptr);
-
-     // Run kernel
-     cl::Kernel kernel = cl::Kernel(manager.get_program(), resizer_program_entry);
-     kernel.setArg(0, cl_image_in);
-     kernel.setArg(1, cl_image_out);
-     kernel.setArg(2, inp_size);
-     kernel.setArg(3, out_size);
-     kernel.setArg(4, ratio_x);
-     kernel.setArg(5, ratio_y);
-
-     manager.get_queue().enqueueNDRangeKernel(
-         kernel,
-         cl::NullRange,
-         cl::NDRange(output.width(), output.height()),
-         cl::NullRange
+     cl::Image2D cl_image_in(
+        context,
+        CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        image_format,
+        image.width(),
+        image.height(),
+        0,
+        (void *) image.data()
      );
 
-     manager.get_queue().enqueueReadImage(
+     float ratio_x = static_cast<float>(output.width()) / static_cast<float>(image.width());
+     float ratio_y = static_cast<float>(output.height()) / static_cast<float>(image.height());
+
+     // Create a buffer for the result
+     cl::Image2D cl_image_out(
+        context,
+        CL_MEM_WRITE_ONLY,
+        image_format,
+        output.width(),
+        output.height(),
+        0,
+        nullptr
+     );
+
+     // Run kernel
+     cl::KernelFunctor<cl::Image2D, cl::Image2D, CLImageSize, CLImageSize, float, float>
+         resize_image(program, resizer_program_entry);
+
+     resize_image(
+         cl::EnqueueArgs(
+             queue,
+             cl::NDRange(
+                 std::max(output.width(), image.width()),
+                 std::max(output.height(), image.height())
+             )
+         ),
+         cl_image_in, cl_image_out, inp_size, out_size, ratio_x, ratio_y
+     );
+
+     queue.enqueueReadImage(
          cl_image_out,
          CL_TRUE,
          {0, 0, 0},
