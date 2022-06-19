@@ -4,11 +4,20 @@ Resizes a given png file to given dimensions using libpng and opencl as backend,
 
 ## Samples
 
-![image](/cthulhu-irl/opencl-png-resizer/images/brave_merida.png?raw=true)
-![image](/cthulhu-irl/opencl-png-resizer/images/output_1600x900.png?raw=true)
-![image](/cthulhu-irl/opencl-png-resizer/images/output_1280x720.png?raw=true)
-![image](/cthulhu-irl/opencl-png-resizer/images/output_854x480.png?raw=true)
-![image](/cthulhu-irl/opencl-png-resizer/images/output_200x200.png?raw=true)
+original photo:
+![](https://raw.githubusercontent.com/cthulhu-irl/opencl-png-resizer/main/images/brave_merida.png)
+
+`png_resizer.exe brave_merdia.png output_1600x900.png 1600 900`
+![](https://raw.githubusercontent.com/cthulhu-irl/opencl-png-resizer/main/images/output_1600x900.png)
+
+`png_resizer.exe brave_merdia.png output_1289x720.png 1280 720`
+![](https://raw.githubusercontent.com/cthulhu-irl/opencl-png-resizer/main/images/output_1280x720.png)
+
+`png_resizer.exe brave_merdia.png output_854x480.png 854 480`
+![](https://raw.githubusercontent.com/cthulhu-irl/opencl-png-resizer/main/images/output_854x480.png)
+
+`png_resizer.exe brave_merdia.png output_200x200.png 200 200`
+![](https://raw.githubusercontent.com/cthulhu-irl/opencl-png-resizer/main/images/output_200x200.png)
 
 ## Build
 
