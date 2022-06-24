@@ -6,8 +6,6 @@
 #include <CL/cl2.hpp>
 
 constexpr static const char* resizer_program_entry = "resize_linear";
-
-/// linear interpolation (lerp) algorithm in opencl language.
 constexpr static const char* resizer_program_src = R"eof(
 __constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
@@ -29,8 +27,6 @@ __kernel void resize_linear(__read_only image2d_t source, __write_only image2d_t
    float2 srcpos = {(pos.x + 0.4995f) / ratioX, (pos.y + 0.4995f) / ratioY};
    int2 SrcSize = { (int)src_img.Width, (int)src_img.Height };
 
-   float4 value;
-
    if ((int)(srcpos.x + .5f) == SrcSize.x)
       srcpos.x = SrcSize.x - 0.5001f;
 
@@ -39,36 +35,9 @@ __kernel void resize_linear(__read_only image2d_t source, __write_only image2d_t
 
    srcpos -= (float2)(0.5f, 0.5f);
 
-   if (srcpos.x < -0.5f || srcpos.x >= SrcSize.x - 1 || srcpos.y < -0.5f || srcpos.y >= SrcSize.y - 1)
-      value = 0;
+   float4 v1 = read_imagef(source, sampler, srcpos);
 
-   int x1 = (int)(srcpos.x);
-   int x2 = (int)(srcpos.x + 1);
-   int y1 = (int)(srcpos.y);
-   int y2 = (int)(srcpos.y + 1);
-
-   float factorx1 = 1 - (srcpos.x - x1);
-   float factorx2 = 1 - factorx1;
-   float factory1 = 1 - (srcpos.y - y1);
-   float factory2 = 1 - factory1;
-
-   float4 f1 = factorx1 * factory1;
-   float4 f2 = factorx2 * factory1;
-   float4 f3 = factorx1 * factory2;
-   float4 f4 = factorx2 * factory2;
-
-   const int2 pos0 = { x1, y1 };
-   const int2 pos1 = { x2, y1 };
-   const int2 pos2 = { x1, y2 };
-   const int2 pos3 = { x2, y2 };
-
-   float4 v1 = read_imagef(source, sampler, pos0);
-   float4 v2 = read_imagef(source, sampler, pos1);
-   float4 v3 = read_imagef(source, sampler, pos2);
-   float4 v4 = read_imagef(source, sampler, pos3);
-   value =  v1 * f1 + v2 * f2 + v3 * f3 + v4 * f4;
-
-   write_imagef(dest, pos, value);
+   write_imagef(dest, pos, v1);
 }
 )eof";
 
